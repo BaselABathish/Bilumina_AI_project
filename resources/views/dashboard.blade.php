@@ -125,12 +125,13 @@
             }
             else if (type === 'EMBED') {
                 dynamicFields.innerHTML = `
-        <div>
-            <label for="file_name" class="block text-sm font-medium text-gray-700">File</label>
-            <input type="file" id="file_name" name="file_name" class="mt-1 block w-full border border-gray-300 rounded shadow-sm" required>
-        </div>
-    `;
-
+                    <div>
+                        <label for="item_name" class="block text-sm font-medium text-gray-700">Item name</label>
+                        <input id = "item_name" name = "item_name">
+                        <label for="json_content" class="block text-sm font-medium text-gray-700">JSON Content</label>
+                        <textarea id="json_content" name="json_content" class="mt-1 block w-full border-gray-300 rounded shadow-sm" rows="6" placeholder='Enter your JSON here...'></textarea>
+                    </div>
+                `;
             }
 
             // LIST_* types: no extra fields

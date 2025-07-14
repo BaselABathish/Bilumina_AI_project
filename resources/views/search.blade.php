@@ -7,7 +7,7 @@
 @isset($results)
     <div class="results">
         @foreach($results as $result)
-            <div>{{ $result['file_name'] }} (Similarity: {{ $result['similarity'] }})</div>
+            <div>{{ $result['item_name'] }} (Similarity: {{ $result['similarity'] }})</div>
         @endforeach
     </div>
 @endisset

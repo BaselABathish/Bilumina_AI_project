@@ -8,6 +8,7 @@ use Doctrine\DBAL\Schema\Schema;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
+use Illuminate\Support\Facades\Validator;
 
 
 class FormController extends Controller
@@ -15,6 +16,8 @@ class FormController extends Controller
     public function handleForm(Request $request)
     {
 
+        //var_dump($request);
+        //print_r($request->all());
         $data = $request->all();
 
         $payload = [
@@ -25,6 +28,7 @@ class FormController extends Controller
             'username' => $data['username'],
             'content' => []
         ];
+
 
         switch ($data['type']) {
             case 'LIST_ASSISTANTS':
@@ -64,39 +68,23 @@ class FormController extends Controller
                 break;
 
             case 'EMBED':
-                if ($request->hasFile('file_name')) {
-                    $file = $request->file('file_name');
+                $jsonData = $data['json_content'] ?? null;
 
-                    if ($file->getClientOriginalExtension() !== 'txt') {
-                        return response()->json(['error' => 'Only .txt files are allowed'], 400);
-                    }
+                // Assign directly (if $jsonData is already structured correctly)
+                $payload['content'] = [
+                    'json_content' => $jsonData
+                ];
 
-                    // Read file content
-                    $fileContent = file_get_contents($file->getRealPath());
-
-                    // Prepare payload with file content
-                    $payload['content'] = [
-                        'file_content' => $fileContent,
-                    ];
-
-
-
-                    // Send as JSON
-                    $response = Http::withHeaders([
-                        'Content-Type' => 'application/json',
-                        'Accept' => 'application/json'
-                    ])->post('http://localhost:8000/ai_api/interact', $payload);
-
-                } else {
-                    return response()->json(['error' => 'No file uploaded'], 400);
-                }
                 break;
         }
+
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
             'Accept' => 'application/json'
         ])->post('http://localhost:8000/ai_api/interact', $payload);
+
+
 
         switch ($data['type']) {
             case 'LIST_ASSISTANTS':
@@ -121,13 +109,17 @@ class FormController extends Controller
 
             case 'EMBED':
                 $data = $response->json();
-                print_r($data);
 
+                //var_dump($data);
                 $embedding =  $data['detail']['response'][0]['embedding'];
+                var_dump($request->all());
 
-                print_r($embedding);
+                $validated = Validator::make($request->all(), [
+                    'item_name' => 'required|string', // Ensure it exists and is a string
+                ])->validate();
+
                 Embedding::create([
-                    'file_name' => $request->file('file_name')->getClientOriginalName(),
+                    'item_name' => $validated['item_name'], // Guaranteed to exist
                     'vector' => $embedding,
                 ]);
         }
