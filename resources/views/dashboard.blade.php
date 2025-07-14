@@ -8,11 +8,11 @@
     <div class="py-6">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white shadow-md rounded p-6">
-                <form id="dynamicForm" action="/submit" method="post">
+                <form id="dynamicForm" action="/submit_request" method="post" enctype="multipart/form-data">
                     @csrf
 
                     <!-- Hidden input to carry the JSON payload -->
-                    <input type="hidden" name="json_payload" id="json_payload">
+
 
                     <!-- Type Dropdown -->
                     <div class="mb-4">
@@ -25,6 +25,7 @@
                             <option value="ADD_VECTOR_STORE">ADD_VECTOR_STORE</option>
                             <option value="DELETE_VECTOR_STORE">DELETE_VECTOR_STORE</option>
                             <option value="LIST_VECTOR_STORES">LIST_VECTOR_STORES</option>
+                            <option value="EMBED">EMBED</option>
                         </select>
                     </div>
 
@@ -122,6 +123,16 @@
                     createInput('Metadata', 'metadata', true),
                 ].join('');
             }
+            else if (type === 'EMBED') {
+                dynamicFields.innerHTML = `
+        <div>
+            <label for="file_name" class="block text-sm font-medium text-gray-700">File</label>
+            <input type="file" id="file_name" name="file_name" class="mt-1 block w-full border border-gray-300 rounded shadow-sm" required>
+        </div>
+    `;
+
+            }
+
             // LIST_* types: no extra fields
         }
     </script>

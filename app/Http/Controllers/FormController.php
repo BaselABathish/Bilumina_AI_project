@@ -3,14 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Embedding;
+use Doctrine\DBAL\Schema\Schema;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+
+
 
 class FormController extends Controller
 {
     public function handleForm(Request $request)
     {
-
 
         $data = $request->all();
 
@@ -22,7 +25,6 @@ class FormController extends Controller
             'username' => $data['username'],
             'content' => []
         ];
-
 
         switch ($data['type']) {
             case 'LIST_ASSISTANTS':
@@ -61,18 +63,74 @@ class FormController extends Controller
                 ];
                 break;
 
-        }
+            case 'EMBED':
+                if ($request->hasFile('file_name')) {
+                    $file = $request->file('file_name');
 
+                    if ($file->getClientOriginalExtension() !== 'txt') {
+                        return response()->json(['error' => 'Only .txt files are allowed'], 400);
+                    }
+
+                    // Read file content
+                    $fileContent = file_get_contents($file->getRealPath());
+
+                    // Prepare payload with file content
+                    $payload['content'] = [
+                        'file_content' => $fileContent,
+                    ];
+
+
+
+                    // Send as JSON
+                    $response = Http::withHeaders([
+                        'Content-Type' => 'application/json',
+                        'Accept' => 'application/json'
+                    ])->post('http://localhost:8000/ai_api/interact', $payload);
+
+                } else {
+                    return response()->json(['error' => 'No file uploaded'], 400);
+                }
+                break;
+        }
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
             'Accept' => 'application/json'
         ])->post('http://localhost:8000/ai_api/interact', $payload);
 
-        return response()->json([
-            'sent_to_python_api' => $payload,
-            'response_from_python' => $response->json()
-        ]);
+        switch ($data['type']) {
+            case 'LIST_ASSISTANTS':
+                $data = $response->json();
+                $assistants = $data['detail']['response'] ?? [];
+                return view('list_asst', compact('assistants'));
+
+            case 'LIST_VECTOR_STORES':
+                $data = $response->json();
+                $vs = $data['detail']['response']['data'] ?? [];
+                return view('list_vs', compact('vs'));
+
+            case 'DELETE_ASSISTANT':
+                return redirect('/');
+            case 'DELETE_VECTOR_STORE':
+                return redirect('/');
+
+            case 'ADD_ASSISTANT':
+                return redirect('/');
+            case 'ADD_VECTOR_STORE':
+                return redirect('/');
+
+            case 'EMBED':
+                $data = $response->json();
+                print_r($data);
+
+                $embedding =  $data['detail']['response'][0]['embedding'];
+
+                print_r($embedding);
+                Embedding::create([
+                    'file_name' => $request->file('file_name')->getClientOriginalName(),
+                    'vector' => $embedding,
+                ]);
+        }
     }
     //
 }

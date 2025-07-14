@@ -6,18 +6,28 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\FormController;
 
+
+use App\Http\Controllers\Search;
+
+use App\Http\Controllers\CompanyRegistrationController;
+
 Route::get('/', function () {
     return view('welcome');
 });
 
 
-use App\Http\Controllers\CompanyRegistrationController;
+
+Route::get('/search', [Search::class, 'page'])->name('search.page');
+Route::post('/search', [Search::class, 'handleSearch'])->name('search.execute');
 
 Route::get('/register-company', [CompanyRegistrationController::class, 'create'])->name('company.register');
 Route::post('/register-company', [CompanyRegistrationController::class, 'store']);
 
 
-Route::post('/submit', [FormController::class, 'handleForm']);
+Route::post('/submit_request', [FormController::class, 'handleForm']);
+
+
+
 
 Route::get('/dashboard', function () {
     return view('dashboard');
